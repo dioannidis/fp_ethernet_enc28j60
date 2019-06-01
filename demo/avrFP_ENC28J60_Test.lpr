@@ -27,14 +27,13 @@ program avrFP_ENC28J60_Test;
 {.$DEFINE FP_HAS_TAT24MAC402}
 
 uses
-  intrinsics, heapmgr, ufp_uartserial,{$IFDEF FP_HAS_TAT24MAC402} ufp_at24mac402,{$ENDIF} ufp_enc28j60;
+  intrinsics, heapmgr, ufp_uartserial,{$IFDEF FP_HAS_TAT24MAC402} ufp_at24mac402,{$ENDIF} ufp_enc28j60,
+  fpethbuf, fpethcfg, fpethip, fpethudp, fpethtcp, fpetharp, fpethtypes, fpethif, fpethicmp, fpethdhcp;
 
 var
   enc28j60: TENC28J60;
 {$IFDEF FP_HAS_TAT24MAC402}
   at24mac402: TAT24MAC402;
-{$ELSE}
-  MacAddress: array[0..5] of byte = (12, 12, 12, 12, 12, 12);
 {$ENDIF}
 
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
@@ -76,7 +75,7 @@ begin
 {$IFDEF FP_HAS_TAT24MAC402}
   enc28j60.MacAddress := at24mac402.MacAddress;
 {$ELSE}
-  enc28j60.MacAddress := MacAddress;
+  enc28j60.MacAddress := HWAddress(12, 12, 12, 12, 12, 12);
 {$ENDIF}
 
   enc28j60.Init;

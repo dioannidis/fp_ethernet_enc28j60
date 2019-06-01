@@ -30,17 +30,17 @@ unit ufp_enc28j60;
 interface
 
 uses
-  intrinsics;
+  intrinsics, fpethtypes;
 
 type
-  TMacAddress = array[0..5] of byte;
+  //TMacAddress = array[0..5] of byte;
 
   { TENC28J60 }
 
   TENC28J60 = object
   private
     FBank: byte;
-    FMacAddress: TMacAddress;
+    FMacAddress: THWAddress;
     FNextPacketPtr,
     FPacketReadPtr: Word;
     FRevID: byte;
@@ -48,7 +48,7 @@ type
     FBufferSize: Word;
     procedure CSActive;
     procedure CSPassive;
-    procedure SetMacAddress(const AValue: TMacAddress);
+    procedure SetMacAddress(const AValue: THWAddress);
     procedure WaitSPI;
     function ReadOp(const AOP, AAddress: byte): byte;
     procedure WriteOp(const AOP: byte; const AAddress: byte; const AData: byte);
@@ -67,7 +67,7 @@ type
   public
     procedure Init;
     procedure Maintain;
-    property MacAddress: TMacAddress read FMacAddress write SetMacAddress;
+    property MacAddress: THWAddress read FMacAddress write SetMacAddress;
   end;
 
 const
@@ -340,7 +340,7 @@ begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT or (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure TENC28J60.SetMacAddress(const AValue: TMacAddress);
+procedure TENC28J60.SetMacAddress(const AValue: THWAddress);
 begin
   FMacAddress := AValue;
 end;
@@ -530,7 +530,6 @@ end;
 
 procedure TENC28J60.Init;
 begin
-  //FInterruptFired := 0;
 
   FBank := $FF;
 

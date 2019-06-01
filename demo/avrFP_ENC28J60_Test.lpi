@@ -26,7 +26,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="..\source"/>
+            <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -59,7 +59,7 @@
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
 dDEBUGUNITS
 -dFP_ENC28J60_DEBUG
--dFP_ENC28J60_USEINTERRUPT"/>
+dFP_ENC28J60_USEINTERRUPT"/>
             <ExecuteAfter>
               <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c usbasp -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
               <CompileReasons Compile="False" Run="False"/>
@@ -76,7 +76,7 @@ dDEBUGUNITS
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="..\source"/>
+            <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -88,7 +88,6 @@ dDEBUGUNITS
             <Optimizations>
               <OptimizationLevel Value="3"/>
             </Optimizations>
-            <SmallerCode Value="True"/>
           </CodeGeneration>
           <Linking>
             <Debugging>
