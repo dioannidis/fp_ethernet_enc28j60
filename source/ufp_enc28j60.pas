@@ -664,6 +664,8 @@ end;
 procedure TENC28J60.Maintain;
 begin
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
+  //Use of EPKCNT compensate for the 
+  //errata point 6, rev B1,B4,B5,B7: Receive Packet Pending Interrupt Flag (PKTIF) unreliable!
   while Read(EPKTCNT) > 0 do
     PacketReceive(Read(EPKTCNT));
 {$ELSE}
