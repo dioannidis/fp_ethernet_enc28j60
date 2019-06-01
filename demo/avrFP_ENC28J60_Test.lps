@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Debug"/>
+    <Units Count="11">
+      <Unit0>
+        <Filename Value="avrFP_ENC28J60_Test.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="50"/>
+        <CursorPos Y="73"/>
+        <UsageCount Value="201"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\source\ufp_enc28j60.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="637"/>
+        <CursorPos X="8" Y="642"/>
+        <UsageCount Value="201"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\source\uutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUtils"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="19"/>
+        <CursorPos X="5" Y="60"/>
+        <UsageCount Value="201"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\source\ufp_at24mac402.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos Y="7"/>
+        <UsageCount Value="201"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="ufp_i2c_twi.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="103"/>
+        <CursorPos X="12" Y="129"/>
+        <UsageCount Value="33"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\..\tools\svn\fpc\trunk\rtl\inc\heaph.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="44"/>
+        <CursorPos X="27" Y="66"/>
+        <UsageCount Value="33"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\..\tools\svn\fpc\trunk\rtl\inc\systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1487"/>
+        <CursorPos X="10" Y="1508"/>
+        <UsageCount Value="9"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\..\tools\svn\fpc\trunk\rtl\embedded\heapmgr.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="68"/>
+        <CursorPos X="40" Y="89"/>
+        <UsageCount Value="15"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\..\tools\svn\fpc\trunk\rtl\inc\strings.pp"/>
+        <UnitName Value="Strings"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="7"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="ufp_uartserial.pas"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="47"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\..\tools\svn\fpc\trunk\rtl\embedded\avr\atmega328p.pp"/>
+        <UnitName Value="ATmega328P"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="56"/>
+        <CursorPos X="71" Y="15"/>
+        <UsageCount Value="11"/>
+      </Unit10>
+    </Units>
+    <JumpHistory Count="4" HistoryIndex="3">
+      <Position1>
+        <Filename Value="avrFP_ENC28J60_Test.lpr"/>
+        <Caret Line="52" Column="24" TopLine="9"/>
+      </Position1>
+      <Position2>
+        <Filename Value="avrFP_ENC28J60_Test.lpr"/>
+        <Caret Line="76" Column="28" TopLine="50"/>
+      </Position2>
+      <Position3>
+        <Filename Value="avrFP_ENC28J60_Test.lpr"/>
+        <Caret Line="89" TopLine="50"/>
+      </Position3>
+      <Position4>
+        <Filename Value="avrFP_ENC28J60_Test.lpr"/>
+        <Caret Line="33" Column="23"/>
+      </Position4>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
