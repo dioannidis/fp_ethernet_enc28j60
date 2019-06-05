@@ -30,7 +30,8 @@
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
-            <HeapSize Value="512"/>
+            <SmartLinkUnit Value="True"/>
+            <HeapSize Value="1024"/>
             <TargetProcessor Value="AVR5"/>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
@@ -46,6 +47,7 @@
               <StripSymbols Value="True"/>
               <UseExternalDbgSyms Value="True"/>
             </Debugging>
+            <LinkSmart Value="True"/>
           </Linking>
           <Other>
             <CustomOptions Value="-WpATMEGA328P
@@ -57,11 +59,14 @@
 -al
 -XPavr-
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
-dDEBUGUNITS
+-dDEBUGUNITS
 -dFP_ENC28J60_DEBUG
 dFP_ENC28J60_USEINTERRUPT"/>
+            <ExecuteBefore>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
+            </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c usbasp -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
+              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c xplainedmini -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
               <CompileReasons Compile="False" Run="False"/>
             </ExecuteAfter>
           </Other>
@@ -88,6 +93,7 @@ dFP_ENC28J60_USEINTERRUPT"/>
             <Optimizations>
               <OptimizationLevel Value="3"/>
             </Optimizations>
+            <SmallerCode Value="True"/>
           </CodeGeneration>
           <Linking>
             <Debugging>
@@ -108,7 +114,7 @@ dFP_ENC28J60_USEINTERRUPT"/>
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
 dFP_ENC28J60_USEINTERRUPT"/>
             <ExecuteAfter>
-              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c usbasp -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
+              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c xplainedmini -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
               <CompileReasons Compile="False" Run="False"/>
             </ExecuteAfter>
           </Other>
@@ -122,24 +128,11 @@ dFP_ENC28J60_USEINTERRUPT"/>
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="4">
+    <Units Count="1">
       <Unit0>
         <Filename Value="avrFP_ENC28J60_Test.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
-      <Unit1>
-        <Filename Value="..\source\ufp_enc28j60.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit1>
-      <Unit2>
-        <Filename Value="..\source\uutils.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uUtils"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="..\source\ufp_at24mac402.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -150,7 +143,6 @@ dFP_ENC28J60_USEINTERRUPT"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\source"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

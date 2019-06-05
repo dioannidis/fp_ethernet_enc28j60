@@ -30,10 +30,9 @@ unit ufp_enc28j60;
 interface
 
 uses
-  intrinsics, fpethtypes;
+  fpethtypes;
 
 type
-  //TMacAddress = array[0..5] of byte;
 
   { TENC28J60 }
 
@@ -58,11 +57,11 @@ type
     procedure PhyWrite(const AAddress: byte; const AData: word);
     procedure ClockOut(const AClk: byte);
   protected
-    {$IFDEF FP_ENC28J60_USEINTERRUPT}
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
     procedure PacketReceive(const APacketCount: Byte);
-    {$ELSE}
+{$ELSE}
     procedure PacketReceive;
-    {$ENDIF}
+{$ENDIF}
     procedure ReadBuffer(ALength: Word; ABuffer: PByte);
   public
     procedure Init;
@@ -70,19 +69,17 @@ type
     property MacAddress: THWAddress read FMacAddress write SetMacAddress;
   end;
 
-const
-  ENC28J60_CONTROL_SI  = 3;
-  ENC28J60_CONTROL_SO  = 4;
-  ENC28J60_CONTROL_SCK = 5;
-
 var
+  // PORTB by default
   ENC28J60_CONTROL_PORT: byte absolute PORTB;
   ENC28J60_CONTROL_DDR: byte absolute DDRB;
-  ENC28J60_CONTROL_INT: byte = -1;
-  ENC28J60_CONTROL_CS: byte  = -1;
-
-  //ENC28J60_CONTROL_INT: byte = 1;
-  //ENC28J60_CONTROL_CS: byte = 2;
+  ENC28J60_CONTROL_SI: byte  = 3;
+  ENC28J60_CONTROL_SO: byte  = 4;
+  ENC28J60_CONTROL_SCK: byte = 5;
+  ENC28J60_CONTROL_CS: byte  = 255;
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+  ENC28J60_CONTROL_INT: byte = 255;
+{$ENDIF}
 
 implementation
 
@@ -484,7 +481,7 @@ begin
     end;
 
    // This frees the memory we just read out. Move the RX read pointer to the start of the next received packet
-   // However, compensate for the errata point 14, rev B1,B4,B5,B7: never write an even address!
+   // However, compensate for the errata point 14, rev B1,B4,B5,B7: make sure this is an odd value
    if FNextPacketPtr = RXSTART_INIT then
    begin
      Write(ERXRDPTL, (RXSTOP_INIT and $FF));
@@ -492,13 +489,16 @@ begin
    end
    else
    begin
+     // As we use padding the packet has
+     // always even length. Decrease it by one.
      Write(ERXRDPTL, ((FNextPacketPtr - 1) and $FF));
      Write(ERXRDPTH, ((FNextPacketPtr - 1) shr 8));
    end;
 
 {$IFDEF FP_ENC28J60_DEBUG}
+    SerialUART.SendStringLn('');
     SerialUART.SendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
-    SerialUART.SendString( ' Length: ' + HexStr(PacketLength, 4));
+    SerialUART.SendString( ' Length: 0x' + HexStr(PacketLength, 4));
     SerialUART.SendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
     SerialUART.SendString(' stat: 0x' + HexStr(ReceiveStatus, 2));
     SerialUART.SendString(' Packet count: ' + HexStr(PacketCount, 2));
@@ -672,5 +672,7 @@ begin
 {$ENDIF}
 end;
 
+initialization
+  ReturnNilIfGrowHeapFails := True;
 
 end.

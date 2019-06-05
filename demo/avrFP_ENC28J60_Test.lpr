@@ -27,7 +27,7 @@ program avrFP_ENC28J60_Test;
 {.$DEFINE FP_HAS_TAT24MAC402}
 
 uses
-  intrinsics, heapmgr, ufp_uartserial,{$IFDEF FP_HAS_TAT24MAC402} ufp_at24mac402,{$ENDIF} ufp_enc28j60,
+  intrinsics, heapmgr, ufp_uartserial, {$IFDEF FP_HAS_TAT24MAC402}at24mac402,{$endif} ufp_enc28j60,
   fpethbuf, fpethcfg, fpethip, fpethudp, fpethtcp, fpetharp, fpethtypes, fpethif, fpethicmp, fpethdhcp;
 
 var
@@ -46,10 +46,8 @@ end;
 {$ENDIF}
 
 begin
-  SerialUART.Init(38400);
+  SerialUART.Init(57600);
   SerialUART.SendStringLn('Free Pascal ENC28J60 Driver Demo');
-
-  ReturnNilIfGrowHeapFails := True;
 
   // Chip Select / Slave Select Pin
   // PORTB Pin 1
@@ -58,9 +56,8 @@ begin
 
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
 
-  // PORTB Pin 1
-
   // Interrupt Pin
+  // PORTB Pin 0
   ENC28J60_CONTROL_INT := 1;
 
   // Interrupt Pin internal pull-up ( High )
