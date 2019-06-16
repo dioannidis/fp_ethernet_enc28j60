@@ -15,64 +15,9 @@
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes Count="3">
-      <Item1 Name="default" Default="True"/>
-      <Item2 Name="Debug">
-        <CompilerOptions>
-          <Version Value="11"/>
-          <PathDelim Value="\"/>
-          <Target>
-            <Filename Value="avrFP_ENC28J60_Test"/>
-          </Target>
-          <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
-            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
-          </SearchPaths>
-          <CodeGeneration>
-            <SmartLinkUnit Value="True"/>
-            <HeapSize Value="1024"/>
-            <TargetProcessor Value="AVR5"/>
-            <TargetCPU Value="avr"/>
-            <TargetOS Value="embedded"/>
-            <Optimizations>
-              <OptimizationLevel Value="0"/>
-            </Optimizations>
-            <SmallerCode Value="True"/>
-          </CodeGeneration>
-          <Linking>
-            <Debugging>
-              <DebugInfoType Value="dsDwarf3"/>
-              <UseLineInfoUnit Value="False"/>
-              <StripSymbols Value="True"/>
-              <UseExternalDbgSyms Value="True"/>
-            </Debugging>
-            <LinkSmart Value="True"/>
-          </Linking>
-          <Other>
-            <CustomOptions Value="-WpATMEGA328P
--g
--a
--dF_CPU:=16000000
--Sm
--Si
--al
--XPavr-
--FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
--dDEBUGUNITS
--dFP_ENC28J60_DEBUG
-dFP_ENC28J60_USEINTERRUPT"/>
-            <ExecuteBefore>
-              <CompileReasons Compile="False" Build="False" Run="False"/>
-            </ExecuteBefore>
-            <ExecuteAfter>
-              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c xplainedmini -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
-              <CompileReasons Compile="False" Run="False"/>
-            </ExecuteAfter>
-          </Other>
-        </CompilerOptions>
-      </Item2>
-      <Item3 Name="Release">
+    <BuildModes Count="2">
+      <Item1 Name="Debug" Default="True"/>
+      <Item2 Name="Release">
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="\"/>
@@ -93,7 +38,6 @@ dFP_ENC28J60_USEINTERRUPT"/>
             <Optimizations>
               <OptimizationLevel Value="3"/>
             </Optimizations>
-            <SmallerCode Value="True"/>
           </CodeGeneration>
           <Linking>
             <Debugging>
@@ -105,21 +49,26 @@ dFP_ENC28J60_USEINTERRUPT"/>
           </Linking>
           <Other>
             <CustomOptions Value="-WpATMEGA328P
--dF_CPU:=16000000
 -Sm
 -al
 -XPavr-
 -Xm
 -Xe
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
-dFP_ENC28J60_USEINTERRUPT"/>
+-dF_CPU:=16000000
+-dFP_ENC28J60_USEINTERRUPT"/>
+            <OtherDefines Count="4">
+              <Define0 Value="F_CPU:=16000000"/>
+              <Define1 Value="DEBUGUNITS"/>
+              <Define2 Value="FP_ENC28J60_USEINTERRUPT"/>
+              <Define3 Value="FP_ENC28J60_DEBUG"/>
+            </OtherDefines>
             <ExecuteAfter>
-              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c xplainedmini -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
-              <CompileReasons Compile="False" Run="False"/>
+              <Command Value="G:\Programming\dimitris\tools\avr8-gnu-toolchain\bin\avr-size.exe --format avr --mcu atmega328p  G:\Programming\dimitris\Projects\fp_ethernet_enc28j60_github\demo\avrFP_ENC28J60_Test.elf"/>
             </ExecuteAfter>
           </Other>
         </CompilerOptions>
-      </Item3>
+      </Item2>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -143,46 +92,49 @@ dFP_ENC28J60_USEINTERRUPT"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <SmartLinkUnit Value="True"/>
       <Checks>
+        <IOChecks Value="True"/>
+        <OverflowChecks Value="True"/>
         <StackChecks Value="True"/>
       </Checks>
-      <HeapSize Value="1024"/>
-      <VerifyObjMethodCallValidity Value="True"/>
+      <HeapSize Value="512"/>
       <TargetProcessor Value="AVR5"/>
       <TargetCPU Value="avr"/>
       <TargetOS Value="embedded"/>
-      <Optimizations>
-        <OptimizationLevel Value="3"/>
-      </Optimizations>
-      <SmallerCode Value="True"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf3"/>
+        <DebugInfoType Value="dsDwarf2"/>
         <UseLineInfoUnit Value="False"/>
         <StripSymbols Value="True"/>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
-      <LinkSmart Value="True"/>
     </Linking>
     <Other>
       <CustomOptions Value="-WpATMEGA328P
--dF_CPU:=16000000
+-g
+-a
 -Sm
+-Si
 -al
 -XPavr-
--Xm
--Xe
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
--dDEBUGUNITS__
--dFP_DEBUG__"/>
+-dF_CPU:=16000000
+-dDEBUGUNITS
+-dFP_ENC28J60_USEINTERRUPT
+-dFP_ENC28J60_DEBUG"/>
+      <OtherDefines Count="4">
+        <Define0 Value="F_CPU:=16000000"/>
+        <Define1 Value="DEBUGUNITS"/>
+        <Define2 Value="FP_ENC28J60_USEINTERRUPT"/>
+        <Define3 Value="FP_ENC28J60_DEBUG"/>
+      </OtherDefines>
       <ExecuteAfter>
-        <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -c usbasp -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
-        <CompileReasons Compile="False" Run="False"/>
+        <Command Value="G:\Programming\dimitris\tools\avr8-gnu-toolchain\bin\avr-size.exe --format avr --mcu atmega328p  G:\Programming\dimitris\Projects\fp_ethernet_enc28j60_github\demo\avrFP_ENC28J60_Test.elf"/>
       </ExecuteAfter>
     </Other>
   </CompilerOptions>
