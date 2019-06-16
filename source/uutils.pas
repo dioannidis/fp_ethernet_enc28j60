@@ -27,6 +27,9 @@ unit uUtils;
 
 interface
 
+function AtomicRead(var value: word): word; inline;
+procedure AtomicWrite(var value: word; new_value: word); inline;
+
 procedure delay_ms(time: byte);
 function int_str(l: longint): shortstring;
 
@@ -36,6 +39,27 @@ var
 {$ENDIF}
 
 implementation
+
+uses
+  intrinsics;
+
+procedure AtomicWrite(var value: word; new_value: word); inline;
+var
+  b: Byte;
+begin
+  b:=avr_save;
+  value:=new_value;
+  avr_restore(b);
+end;
+
+function AtomicRead(var value: word): word; inline;
+var
+  b: Byte;
+begin
+  b:=avr_save;
+  AtomicRead:=value;
+  avr_restore(b);
+end;
 
 procedure delay_ms(time : byte);
 const
