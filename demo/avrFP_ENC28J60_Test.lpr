@@ -27,21 +27,15 @@ program avrFP_ENC28J60_Test;
 {.$DEFINE FP_HAS_TAT24MAC402}
 
 uses
-  intrinsics, heapmgr, ufp_uartserial, {$IFDEF FP_HAS_TAT24MAC402}at24mac402,{$endif} ufp_enc28j60,
+  intrinsics, heapmgr, ufp_uartserial, {$IFDEF FP_HAS_TAT24MAC402}ufp_at24mac402,{$endif} ufp_enc28j60,
   fpethbuf, fpethcfg, fpethip, fpethudp, fpethtcp, fpetharp, fpethtypes, fpethif, fpethicmp, fpethdhcp;
-
-var
-  enc28j60: TENC28J60;
-{$IFDEF FP_HAS_TAT24MAC402}
-  at24mac402: TAT24MAC402;
-{$ENDIF}
 
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
 procedure ExternalInterrupt0_ISR; public Name 'PCINT0_ISR'; interrupt;
 begin
   // Check if ENC28J60 Interrupt Pin is Low
   if Not (PINB and (1 shl ENC28J60_CONTROL_INT) = (1 shl ENC28J60_CONTROL_INT)) then
-    enc28j60.maintain;
+    enc28j60_InterruptTriggered;
 end;
 {$ENDIF}
 
@@ -70,18 +64,16 @@ begin
 {$ENDIF}
 
 {$IFDEF FP_HAS_TAT24MAC402}
-  enc28j60.MacAddress := at24mac402.MacAddress;
+  enc28j60_SetMacAddress(at24mac402_GetMacAddress);
 {$ELSE}
-  enc28j60.MacAddress := HWAddress(12, 12, 12, 12, 12, 12);
+  enc28j60_SetMacAddress(HWAddress($01, $02, $03, $04, $05, $06));
 {$ENDIF}
 
-  enc28j60.Init;
+  enc28j60_Init;
   // ENC28J60 Uses SPI which needs global interrupts.
   avr_sei;
 
   repeat
-{$IFNDEF FP_ENC28J60_USEINTERRUPT}
-    enc28j60.Maintain;
-{$ENDIF}
+    enc28j60_Maintain;
   until false;
 end.

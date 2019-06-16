@@ -25,49 +25,18 @@ unit ufp_enc28j60;
 }
 
 {$mode objfpc}{$H-}
-{$WRITEABLECONST OFF}
-{$modeswitch result}
+
 interface
 
 uses
-  fpethtypes;
+  uUtils, fpethtypes;
 
-type
-
-  { TENC28J60 }
-
-  TENC28J60 = object
-  private
-    FBank: byte;
-    FMacAddress: THWAddress;
-    FNextPacketPtr,
-    FPacketReadPtr: Word;
-    FRevID: byte;
-    FBuffer: PByte;
-    FBufferSize: Word;
-    procedure CSActive;
-    procedure CSPassive;
-    procedure SetMacAddress(const AValue: THWAddress);
-    procedure WaitSPI;
-    function ReadOp(const AOP, AAddress: byte): byte;
-    procedure WriteOp(const AOP: byte; const AAddress: byte; const AData: byte);
-    procedure SetBank(const AAddress: byte);
-    function Read(const AAddress: byte): byte;
-    procedure Write(const AAddress, Adata: byte);
-    procedure PhyWrite(const AAddress: byte; const AData: word);
-    procedure ClockOut(const AClk: byte);
-  protected
+  procedure enc28j60_Init;
+  procedure enc28j60_Maintain;
+  procedure enc28j60_SetMacAddress(const AMacAddress: THWAddress);
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
-    procedure PacketReceive(const APacketCount: Byte);
-{$ELSE}
-    procedure PacketReceive;
+  procedure enc28j60_InterruptTriggered;
 {$ENDIF}
-    procedure ReadBuffer(ALength: Word; ABuffer: PByte);
-  public
-    procedure Init;
-    procedure Maintain;
-    property MacAddress: THWAddress read FMacAddress write SetMacAddress;
-  end;
 
 var
   // PORTB by default
@@ -325,30 +294,38 @@ const
   MAX_FRAMELEN = 1500;
 // (note: maximum ethernet frame length would be 1518)
 
-{ TENC28J60 }
+var
+  FPacketReceivedCounter: Byte;
+  FBank: byte;
+  FMacAddress: THWAddress;
+  FNextPacketPtr,
+  FPacketReadPtr: Word;
+  FRevID: byte;
+  FBuffer: PByte;
+  FBufferSize: Word;
 
-procedure TENC28J60.CSActive;
+procedure CSActive;
 begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT and not (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure TENC28J60.CSPassive;
+procedure CSPassive;
 begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT or (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure TENC28J60.SetMacAddress(const AValue: THWAddress);
+procedure SetMacAddress(const AValue: THWAddress);
 begin
   FMacAddress := AValue;
 end;
 
-procedure TENC28J60.WaitSPI;
+procedure WaitSPI;
 begin
   repeat
   until (SPSR and (1 shl SPIF)) <> 0;
 end;
 
-function TENC28J60.ReadOp(const AOP, AAddress: byte): byte;
+function ReadOp(const AOP, AAddress: byte): byte;
 begin
   CSActive;
   // issue read command
@@ -368,7 +345,7 @@ begin
   Result := SPDR;
 end;
 
-procedure TENC28J60.WriteOp(const AOP: byte; const AAddress: byte; const AData: byte);
+procedure WriteOp(const AOP: byte; const AAddress: byte; const AData: byte);
 begin
   CSActive;
   SPDR := (AOP or (AAddress and ADDR_MASK));
@@ -378,7 +355,7 @@ begin
   CSPassive;
 end;
 
-procedure TENC28J60.SetBank(const AAddress: byte);
+procedure SetBank(const AAddress: byte);
 begin
   // set the bank (if needed)
   if (byte(AAddress and BANK_MASK) <> FBank) then
@@ -390,7 +367,7 @@ begin
   end;
 end;
 
-function TENC28J60.Read(const AAddress: byte): byte;
+function Read(const AAddress: byte): byte;
 begin
   // set the bank
   SetBank(AAddress);
@@ -398,7 +375,7 @@ begin
   Result := ReadOp(ENC28J60_READ_CTRL_REG, AAddress);
 end;
 
-procedure TENC28J60.Write(const AAddress, Adata: byte);
+procedure Write(const AAddress, Adata: byte);
 begin
   // set the bank
   SetBank(AAddress);
@@ -406,7 +383,7 @@ begin
   WriteOp(ENC28J60_WRITE_CTRL_REG, AAddress, Adata);
 end;
 
-procedure TENC28J60.PhyWrite(const AAddress: byte; const AData: word);
+procedure PhyWrite(const AAddress: byte; const AData: word);
 begin
   // set the PHY register address
   Write(MIREGADR, AAddress);
@@ -418,101 +395,13 @@ begin
   until (Read(MISTAT) and MISTAT_BUSY) = 0;
 end;
 
-procedure TENC28J60.ClockOut(const AClk: byte);
+procedure ClockOut(const AClk: byte);
 begin
   //setup clkout: 2 is 12.5MHz:
   Write(ECOCON, AClk and $7);
 end;
 
-{$IFDEF FP_ENC28J60_USEINTERRUPT}
-procedure TENC28J60.PacketReceive(const APacketCount: Byte);
-{$ELSE}
-procedure TENC28J60.PacketReceive;
-{$ENDIF}
-var
-  PacketCount: Byte;
-  PacketLength, ReceiveStatus: uint16; // Word;
-  y: integer;
-begin
-{$IFDEF FP_ENC28J60_USEINTERRUPT}
-  PacketCount := APacketCount;
-{$ELSE}
-  PacketCount := Read(EPKTCNT);
-  if PacketCount <> 0 then
-  begin
-{$ENDIF}
-
-    // Set the packet read pointer to actual start of packet bypass the first 6 bytes.
-    if FNextPacketPtr + 6 > RXSTOP_INIT then
-      FPacketReadPtr := FNextPacketPtr + 6 - RXSTOP_INIT + RXSTART_INIT
-    else
-      FPacketReadPtr := FNextPacketPtr + 6;
-
-    // Set the read pointer to the start of the received packet
-    Write(ERDPTL, (FNextPacketPtr and $FF));
-    Write(ERDPTH, (FNextPacketPtr shr $8));
-
-	  // read the next packet pointer
-	  FNextPacketPtr := ReadOp(ENC28J60_READ_BUF_MEM, 0);
-	  FNextPacketPtr := FNextPacketPtr or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
-
-    // read the packet length (see datasheet page 43)
-	  PacketLength := ReadOp(ENC28J60_READ_BUF_MEM, 0);
-	  PacketLength := PacketLength or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
-    Dec(PacketLength, 4); //remove the CRC count
-
-    // read the receive status (see datasheet page 43)
-	  ReceiveStatus := ReadOp(ENC28J60_READ_BUF_MEM, 0);
-	  ReceiveStatus := ReceiveStatus or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
-
-    // decrement the packet counter indicate we are done with this packet
-	  WriteOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
-
-    if (ReceiveStatus and $80) <> 0 then
-    begin
-      if FBufferSize < PacketLength then
-      begin
-        FreeMem(FBuffer);
-        FBufferSize := PacketLength;
-        FBuffer := GetMem(PacketLength);
-      end;
-      if Assigned(FBuffer) then
-        ReadBuffer(PacketLength, FBuffer);
-    end;
-
-   // This frees the memory we just read out. Move the RX read pointer to the start of the next received packet
-   // However, compensate for the errata point 14, rev B1,B4,B5,B7: make sure this is an odd value
-   if FNextPacketPtr = RXSTART_INIT then
-   begin
-     Write(ERXRDPTL, (RXSTOP_INIT and $FF));
-     Write(ERXRDPTH, (RXSTOP_INIT shr 8));
-   end
-   else
-   begin
-     // As we use padding the packet has
-     // always even length. Decrease it by one.
-     Write(ERXRDPTL, ((FNextPacketPtr - 1) and $FF));
-     Write(ERXRDPTH, ((FNextPacketPtr - 1) shr 8));
-   end;
-
-{$IFDEF FP_ENC28J60_DEBUG}
-    SerialUART.SendStringLn('');
-    SerialUART.SendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
-    SerialUART.SendString( ' Length: 0x' + HexStr(PacketLength, 4));
-    SerialUART.SendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
-    SerialUART.SendString(' stat: 0x' + HexStr(ReceiveStatus, 2));
-    SerialUART.SendString(' Packet count: ' + HexStr(PacketCount, 2));
-    SerialUART.SendString(' ');
-    for y := 0 to PacketLength - 1 do
-      SerialUART.SendString(HexStr(FBuffer[y], 2) + ' ');
-    SerialUART.SendStringLn('');
-{$ENDIF}
-{$IFNDEF FP_ENC28J60_USEINTERRUPT}
-  end;
-{$ENDIF}
-end;
-
-procedure TENC28J60.ReadBuffer(ALength: Word; ABuffer: PByte);
+procedure ReadBuffer(ALength: Word; ABuffer: PByte);
 begin
   CSActive;
   SPDR := ENC28J60_READ_BUF_MEM;
@@ -528,7 +417,87 @@ begin
   CSPassive;
 end;
 
-procedure TENC28J60.Init;
+procedure PacketReceive;
+var
+  PacketLength, ReceiveStatus: Word;
+  y: integer;
+begin
+  // Set the packet read pointer to actual start of packet bypass the first 6 bytes.
+  if FNextPacketPtr + 6 > RXSTOP_INIT then
+    FPacketReadPtr := FNextPacketPtr + 6 - RXSTOP_INIT + RXSTART_INIT
+  else
+    FPacketReadPtr := FNextPacketPtr + 6;
+
+  // Set the read pointer to the start of the received packet
+  Write(ERDPTL, (FNextPacketPtr and $FF));
+  Write(ERDPTH, (FNextPacketPtr shr $8));
+
+  // read the next packet pointer
+  FNextPacketPtr := ReadOp(ENC28J60_READ_BUF_MEM, 0);
+  FNextPacketPtr := FNextPacketPtr or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
+
+  // read the packet length (see datasheet page 43)
+  PacketLength := ReadOp(ENC28J60_READ_BUF_MEM, 0);
+  PacketLength := PacketLength or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
+  Dec(PacketLength, 4); //remove the CRC count
+
+  // read the receive status (see datasheet page 43)
+  ReceiveStatus := ReadOp(ENC28J60_READ_BUF_MEM, 0);
+  ReceiveStatus := ReceiveStatus or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
+
+  // decrement the packet counter indicate we are done with this packet
+  WriteOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
+
+  // Received Ok. received status vectors bit 23 (see datasheet page 43)
+  if ((ReceiveStatus and $80) <> 0) then
+  begin
+    //if FBufferSize < PacketLength then
+    //begin
+    //  FreeMem(FBuffer);
+    //  FBufferSize := PacketLength;
+    //  FBuffer := GetMem(PacketLength);
+    //end;
+    //if Assigned(FBuffer) then
+    //  ReadBuffer(PacketLength, FBuffer);
+  end;
+
+  // This frees the memory we just read out. Move the RX read pointer to the start of the next received packet
+  // However, compensate for the errata point 14, rev B1,B4,B5,B7: make sure this is an odd value
+  if FNextPacketPtr = RXSTART_INIT then
+  begin
+    Write(ERXRDPTL, (RXSTOP_INIT and $FF));
+    Write(ERXRDPTH, (RXSTOP_INIT shr 8));
+  end
+  else
+  begin
+    // As we use padding the packet has
+    // always even length. Decrease it by one.
+    Write(ERXRDPTL, ((FNextPacketPtr - 1) and $FF));
+    Write(ERXRDPTH, ((FNextPacketPtr - 1) shr 8));
+  end;
+
+{$IFDEF FP_ENC28J60_DEBUG}
+  SerialUART.SendStringLn('');
+  SerialUART.SendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
+  SerialUART.SendString( ' Length: 0x' + HexStr(PacketLength, 4));
+  SerialUART.SendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
+  SerialUART.SendString(' stat: 0x' + HexStr(ReceiveStatus, 4));
+  SerialUART.SendString(' Packet count: ' + HexStr(FPacketReceivedCounter, 2));
+  //SerialUART.SendString(' ');
+  //for y := 0 to PacketLength - 1 do
+  //  SerialUART.SendString(HexStr(FBuffer[y], 2) + ' ');
+  SerialUART.SendStringLn('');
+{$ENDIF}
+
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+  // In Interrupt mode, reread the EPKTCNT for remaining packets
+  // or in case of nested interrupts.
+  FPacketReceivedCounter := Read(EPKTCNT);
+{$ENDIF}
+
+end;
+
+procedure enc28j60_Init;
 begin
 
   FBank := $FF;
@@ -660,17 +629,30 @@ begin
 
 end;
 
-procedure TENC28J60.Maintain;
+procedure enc28j60_Maintain;
 begin
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
-  //Use of EPKCNT compensate for the 
-  //errata point 6, rev B1,B4,B5,B7: Receive Packet Pending Interrupt Flag (PKTIF) unreliable!
-  while Read(EPKTCNT) > 0 do
-    PacketReceive(Read(EPKTCNT));
+  If FPacketReceivedCounter > 0 then
 {$ELSE}
-  PacketReceive;
+  //Use of EPKCNT compensate for the
+  //errata point 6, rev B1,B4,B5,B7: Receive Packet Pending Interrupt Flag (PKTIF) unreliable!
+  FPacketReceivedCounter := Read(EPKTCNT);
+  if FPacketReceivedCounter > 0 then
 {$ENDIF}
+    PacketReceive;
 end;
+
+procedure enc28j60_SetMacAddress(const AMacAddress: THWAddress);
+begin
+  FMacAddress := AMacAddress;
+end;
+
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+procedure enc28j60_InterruptTriggered;
+begin
+  Inc(FPacketReceivedCounter, 1);
+end;
+{$ENDIF}
 
 initialization
   ReturnNilIfGrowHeapFails := True;

@@ -6,25 +6,15 @@ unit ufp_at24mac402;
 interface
 
 uses
-  ufp_i2c_twi, ufp_enc28j60;
+  fpethtypes, ufp_i2c_twi;
 
-type
-
-  { TAT24MAC402 }
-
-  TAT24MAC402 = object
-  private
-    function GetMacAddress: TMacAddress;
-  public
-    property MacAddress: TMacAddress read GetMacAddress;
-  end;
+  function at24mac402_GetMacAddress: THWAddress;
 
 implementation
 
-{ TAT24MAC402 }
 
 // Read MacAddress from AT24MAC402
-function TAT24MAC402.GetMacAddress: TMacAddress;
+function at24mac402_GetMacAddress: THWAddress;
 begin
   TWIInit;
   TWIStart((($58 or 0) shl 1) or TWI_Write);
