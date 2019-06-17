@@ -295,7 +295,7 @@ const
 // (note: maximum ethernet frame length would be 1518)
 
 var
-  FPacketReceivedCounter: Byte;
+  FPacketReceivedCounter: Word;
   FBank: byte;
   FMacAddress: THWAddress;
   FNextPacketPtr,
@@ -420,7 +420,9 @@ end;
 procedure PacketReceive;
 var
   PacketLength, ReceiveStatus: Word;
-  y: integer;
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+  tmpPacketCount: Byte;
+{$ENDIF}
 begin
   // Set the packet read pointer to actual start of packet bypass the first 6 bytes.
   if FNextPacketPtr + 6 > RXSTOP_INIT then
@@ -451,14 +453,14 @@ begin
   // Received Ok. received status vectors bit 23 (see datasheet page 43)
   if ((ReceiveStatus and $80) <> 0) then
   begin
-    //if FBufferSize < PacketLength then
-    //begin
-    //  FreeMem(FBuffer);
-    //  FBufferSize := PacketLength;
-    //  FBuffer := GetMem(PacketLength);
-    //end;
-    //if Assigned(FBuffer) then
-    //  ReadBuffer(PacketLength, FBuffer);
+    if FBufferSize < PacketLength then
+    begin
+      FreeMem(FBuffer);
+      FBufferSize := PacketLength;
+      FBuffer := GetMem(PacketLength);
+    end;
+    if Assigned(FBuffer) then
+      ReadBuffer(PacketLength, FBuffer);
   end;
 
   // This frees the memory we just read out. Move the RX read pointer to the start of the next received packet
@@ -492,7 +494,8 @@ begin
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
   // In Interrupt mode, reread the EPKTCNT for remaining packets
   // or in case of nested interrupts.
-  FPacketReceivedCounter := Read(EPKTCNT);
+  tmpPacketCount := Read(EPKTCNT);
+  AtomicWrite(FPacketReceivedCounter, tmpPacketCount);
 {$ENDIF}
 
 end;
