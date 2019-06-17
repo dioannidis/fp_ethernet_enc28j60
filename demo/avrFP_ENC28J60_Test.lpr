@@ -40,8 +40,10 @@ end;
 {$ENDIF}
 
 begin
+{$IFDEF FP_ENC28J60_DEBUG}
   SerialUART.Init(57600);
   SerialUART.SendStringLn('Free Pascal ENC28J60 Driver Demo');
+{$ENDIF}
 
   // Chip Select / Slave Select Pin
   // PORTB Pin 1
