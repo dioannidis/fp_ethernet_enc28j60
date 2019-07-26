@@ -63,7 +63,7 @@ end;
 
 procedure delay_ms(time : byte);
 const
-  fmul = 1 * 16000000 div 1000000;
+  fmul = 1 * F_CPU div 1000000;
 label
   loop1, loop2, loop3;
 begin
