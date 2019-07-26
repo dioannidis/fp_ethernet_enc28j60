@@ -27,7 +27,7 @@ program avrFP_ENC28J60_Test;
 {$mode objfpc}{$H-}
 {$WRITEABLECONST OFF}
 
-{.$DEFINE FP_HAS_TAT24MAC402}
+{$DEFINE FP_HAS_TAT24MAC402}
 
 uses
   intrinsics,
@@ -78,7 +78,7 @@ begin
 {$ENDIF}
 
 {$IFDEF FP_HAS_TAT24MAC402}
-  enc28j60_Init(at24mac402_GetMacAddress);
+  enc28j60_Init(at24mac402_GetMacAddress(0));
 {$ELSE}
   enc28j60_Init(HWAddress($01, $02, $03, $04, $05, $06));
 {$ENDIF}
