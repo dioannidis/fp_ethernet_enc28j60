@@ -9,8 +9,8 @@
         <Filename Value="avrFP_ENC28J60_Test.lpr"/>
         <IsPartOfProject Value="True"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="23"/>
-        <CursorPos X="3" Y="30"/>
+        <TopLine Value="59"/>
+        <CursorPos Y="31"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -169,11 +169,12 @@
         <UsageCount Value="10"/>
       </Unit22>
     </Units>
-    <OtherDefines Count="4">
+    <OtherDefines Count="5">
       <Define0 Value="DEBUGUNITS"/>
       <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
       <Define2 Value="FP_ENC28J60_DEBUG"/>
       <Define3 Value="F_CPU:=20000000"/>
+      <Define4 Value="F_CPU:=16000000"/>
     </OtherDefines>
     <JumpHistory Count="5" HistoryIndex="4">
       <Position1>

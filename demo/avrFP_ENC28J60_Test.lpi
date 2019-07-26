@@ -54,7 +54,7 @@
 -XPavr-
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
 -dFP_ENC28J60_DEBUG
--dF_CPU:=20000000"/>
+-dF_CPU:=16000000"/>
             <OtherDefines Count="4">
               <Define0 Value="DEBUGUNITS"/>
               <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
@@ -132,14 +132,14 @@
 -XPavr-
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
 -dDEBUGUNITS
--dFP_ENC28J60_USEINTERRUPT
 -dFP_ENC28J60_DEBUG
--dF_CPU:=20000000"/>
-      <OtherDefines Count="4">
+-dF_CPU:=16000000"/>
+      <OtherDefines Count="5">
         <Define0 Value="DEBUGUNITS"/>
         <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
         <Define2 Value="FP_ENC28J60_DEBUG"/>
         <Define3 Value="F_CPU:=20000000"/>
+        <Define4 Value="F_CPU:=16000000"/>
       </OtherDefines>
       <ExecuteAfter>
         <Command Value="G:\Programming\dimitris\tools\avr8-gnu-toolchain\bin\avr-size.exe --format avr --mcu atmega328p  G:\Programming\dimitris\Projects\fp_ethernet_enc28j60_github\demo\avrFP_ENC28J60_Test.elf"/>
