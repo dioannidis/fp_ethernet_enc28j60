@@ -31,12 +31,6 @@ function AtomicRead(var value: word): word; inline;
 procedure AtomicWrite(var value: word; new_value: word); inline;
 
 procedure delay_ms(time: byte);
-//function int_str(l: longint): shortstring;
-
-{$IFDEF FP_DEBUG}
-var
-  DbgMsg: ShortString;
-{$ENDIF}
 
 implementation
 
@@ -83,44 +77,5 @@ begin
       brne loop1
   end ['r20','r21','r22'];
 end;
-
-//function int_str(l: longint): shortstring;
-//var
-//  m, m1: longword;
-//  pcstart, pc2start, pc, pc2: PChar;
-//  hs: string[32];
-//  overflow: longint;
-//  s: shortstring;
-//begin
-  //pc2start := @s[1];
-  //pc2 := pc2start;
-  //if (l < 0) then
-  //begin
-  //  pc2^ := '-';
-  //  Inc(pc2);
-  //  m := longword(-l);
-  //end
-  //else
-  //  m := longword(l);
-  //pcstart := PChar(@hs[0]);
-  //pc := pcstart;
-  //repeat
-  //  m1 := m div 10;
-  //  Inc(pc);
-  //  pc^ := char(m - (m1 * 10) + byte('0'));
-  //  m := m1;
-  //until m = 0;
-  //overflow := (pc - pcstart) + (pc2 - pc2start) - high(s);
-  //if overflow > 0 then
-  //  Inc(pcstart, overflow);
-  //while (pc > pcstart) do
-  //begin
-  //  pc2^ := pc^;
-  //  Inc(pc2);
-  //  Dec(pc);
-  //end;
-  //s[0] := char(pc2 - pc2start);
-  //Result := s;
-//end;
 
 end.
