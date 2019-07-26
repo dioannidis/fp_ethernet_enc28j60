@@ -25,15 +25,18 @@ unit ufp_enc28j60;
 }
 
 {$mode objfpc}{$H-}
+{$WRITEABLECONST OFF}
 
 interface
 
 uses
-  uUtils, fpethtypes;
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+  uUtils,
+{$ENDIF}
+  fpethtypes;
 
-  procedure enc28j60_Init;
+  procedure enc28j60_Init(const AHWAddress: THWAddress);
   procedure enc28j60_Maintain;
-  procedure enc28j60_SetMacAddress(const AMacAddress: THWAddress);
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
   procedure enc28j60_InterruptTriggered;
 {$ENDIF}
@@ -297,29 +300,23 @@ const
 var
   FPacketReceivedCounter: Word;
   FBank: byte;
-  FMacAddress: THWAddress;
   FNextPacketPtr,
   FPacketReadPtr: Word;
   FRevID: byte;
   FBuffer: PByte;
-  FBufferSize: Word;
+  //FBufferSize: Word;
 
-procedure CSActive;
+procedure CSActive; inline;
 begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT and not (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure CSPassive;
+procedure CSPassive; inline;
 begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT or (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure SetMacAddress(const AValue: THWAddress);
-begin
-  FMacAddress := AValue;
-end;
-
-procedure WaitSPI;
+procedure WaitSPI; inline;
 begin
   repeat
   until (SPSR and (1 shl SPIF)) <> 0;
@@ -355,7 +352,7 @@ begin
   CSPassive;
 end;
 
-procedure SetBank(const AAddress: byte);
+procedure SetBank(const AAddress: byte); inline;
 begin
   // set the bank (if needed)
   if (byte(AAddress and BANK_MASK) <> FBank) then
@@ -383,13 +380,13 @@ begin
   WriteOp(ENC28J60_WRITE_CTRL_REG, AAddress, Adata);
 end;
 
-procedure PhyWrite(const AAddress: byte; const AData: word);
+procedure PhyWrite(const AAddress: byte; const AData: Word);
 begin
   // set the PHY register address
   Write(MIREGADR, AAddress);
   // write the PHY data
-  Write(MIWRL, AData);
-  Write(MIWRH, AData shr 8);
+  Write(MIWRL, Byte(AData));
+  Write(MIWRH, Byte(AData shr 8));
   // wait until the PHY write completes
   repeat
   until (Read(MISTAT) and MISTAT_BUSY) = 0;
@@ -420,9 +417,7 @@ end;
 procedure PacketReceive;
 var
   PacketLength, ReceiveStatus: Word;
-{$IFDEF FP_ENC28J60_USEINTERRUPT}
-  tmpPacketCount: Byte;
-{$ENDIF}
+  y: integer;
 begin
   // Set the packet read pointer to actual start of packet bypass the first 6 bytes.
   if FNextPacketPtr + 6 > RXSTOP_INIT then
@@ -453,13 +448,13 @@ begin
   // Received Ok. received status vectors bit 23 (see datasheet page 43)
   if ((ReceiveStatus and $80) <> 0) then
   begin
-    if FBufferSize < PacketLength then
-    begin
-      FreeMem(FBuffer);
-      FBufferSize := PacketLength;
-      FBuffer := GetMem(PacketLength);
-    end;
-    if Assigned(FBuffer) then
+    //if FBufferSize < PacketLength then
+    //begin
+    //  FreeMem(FBuffer);
+    //  FBufferSize := PacketLength;
+    //  FBuffer := GetMem(PacketLength);
+    //end;
+    //if Assigned(FBuffer) then
       ReadBuffer(PacketLength, FBuffer);
   end;
 
@@ -479,33 +474,27 @@ begin
   end;
 
 {$IFDEF FP_ENC28J60_DEBUG}
-  SerialUART.SendStringLn('');
-  SerialUART.SendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
-  SerialUART.SendString( ' Length: 0x' + HexStr(PacketLength, 4));
-  SerialUART.SendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
-  SerialUART.SendString(' stat: 0x' + HexStr(ReceiveStatus, 4));
-  SerialUART.SendString(' Packet count: ' + HexStr(FPacketReceivedCounter, 2));
-  //SerialUART.SendString(' ');
-  //for y := 0 to PacketLength - 1 do
-  //  SerialUART.SendString(HexStr(FBuffer[y], 2) + ' ');
-  SerialUART.SendStringLn('');
-{$ENDIF}
-
-{$IFDEF FP_ENC28J60_USEINTERRUPT}
-  // In Interrupt mode, reread the EPKTCNT for remaining packets
-  // or in case of nested interrupts.
-  tmpPacketCount := Read(EPKTCNT);
-  AtomicWrite(FPacketReceivedCounter, tmpPacketCount);
+  UARTSendStringLn('');
+  UARTSendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
+  UARTSendString( ' Length: 0x' + HexStr(PacketLength, 4));
+  UARTSendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
+  UARTSendString(' stat: 0x' + HexStr(ReceiveStatus, 4));
+  UARTSendString(' Packet count: ' + HexStr(FPacketReceivedCounter, 2));
+  UARTSendStringLn('');
+  for y := 0 to PacketLength - 1 do
+    UARTSendString(HexStr(FBuffer[y], 2));
+  UARTSendStringLn('');
 {$ENDIF}
 
 end;
 
-procedure enc28j60_Init;
+procedure enc28j60_Init(const AHWAddress: THWAddress);
 begin
 
   FBank := $FF;
 
   FBuffer := nil;
+  FBuffer := GetMem(1518);
 
   // Iniialize io
   // SS as output.
@@ -595,12 +584,12 @@ begin
   // do bank 3 stuff
   // write MAC address
   // NOTE: MAC address in ENC28J60 is byte-backward
-  Write(MAADR5, FMacAddress[0]);
-  Write(MAADR4, FMacAddress[1]);
-  Write(MAADR3, FMacAddress[2]);
-  Write(MAADR2, FMacAddress[3]);
-  Write(MAADR1, FMacAddress[4]);
-  Write(MAADR0, FMacAddress[5]);
+  Write(MAADR5, AHWAddress[0]);
+  Write(MAADR4, AHWAddress[1]);
+  Write(MAADR3, AHWAddress[2]);
+  Write(MAADR2, AHWAddress[3]);
+  Write(MAADR1, AHWAddress[4]);
+  Write(MAADR0, AHWAddress[5]);
   // no loopback of transmitted frames
   PhyWrite(PHCON2, PHCON2_HDLDIS);
 
@@ -625,17 +614,23 @@ begin
   FRevID := Read(EREVID);
 
 {$IFDEF FP_ENC28J60_DEBUG}
-  SerialUART.SendString('ENC28J60 Revision Id: 0x');
-  SerialUART.SendString(HexStr(FRevID, 2));
-  SerialUART.SendStringLn(' Initialized.');
+  //UARTSendString('ENC28J60 Revision Id: 0x');
+  //UARTSendString(HexStr(FRevID, 2));
+  //UARTSendStringLn(' Initialized.');
 {$ENDIF}
 
 end;
 
 procedure enc28j60_Maintain;
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+var
+  tmpPacketCount: Byte;
+{$ENDIF}
 begin
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
-  If FPacketReceivedCounter > 0 then
+  tmpPacketCount := AtomicRead(FPacketReceivedCounter);
+  If (tmpPacketCount > 0) then
+  begin
 {$ELSE}
   //Use of EPKCNT compensate for the
   //errata point 6, rev B1,B4,B5,B7: Receive Packet Pending Interrupt Flag (PKTIF) unreliable!
@@ -643,15 +638,18 @@ begin
   if FPacketReceivedCounter > 0 then
 {$ENDIF}
     PacketReceive;
+{$IFDEF FP_ENC28J60_USEINTERRUPT}
+  // In Interrupt mode, reread the EPKTCNT for remaining packets
+  // or in case of nested interrupts.
+  tmpPacketCount := Read(EPKTCNT);
+  AtomicWrite(FPacketReceivedCounter, tmpPacketCount);
 end;
+{$ENDIF}
 
-procedure enc28j60_SetMacAddress(const AMacAddress: THWAddress);
-begin
-  FMacAddress := AMacAddress;
 end;
 
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
-procedure enc28j60_InterruptTriggered;
+procedure enc28j60_InterruptTriggered; inline;
 begin
   Inc(FPacketReceivedCounter, 1);
 end;

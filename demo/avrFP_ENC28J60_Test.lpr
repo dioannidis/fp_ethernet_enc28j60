@@ -24,15 +24,27 @@ program avrFP_ENC28J60_Test;
 
 }
 
+{$mode objfpc}{$H-}
+{$WRITEABLECONST OFF}
+
 {.$DEFINE FP_HAS_TAT24MAC402}
 
 uses
-  intrinsics, heapmgr, ufp_uartserial, {$IFDEF FP_HAS_TAT24MAC402}ufp_at24mac402,{$endif} ufp_enc28j60,
+  intrinsics,
+  heapmgr,
+{$IFDEF FP_ENC28J60_DEBUG}
+  ufp_uartserial,
+{$ENDIF}
+{$IFDEF FP_HAS_TAT24MAC402}
+  ufp_at24mac402,
+{$endif}
+  ufp_enc28j60,
   fpethbuf, fpethcfg, fpethip, fpethudp, fpethtcp, fpetharp, fpethtypes, fpethif, fpethicmp, fpethdhcp;
 
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
 procedure ExternalInterrupt0_ISR; public Name 'PCINT0_ISR'; interrupt;
 begin
+  avr_sei;
   // Check if ENC28J60 Interrupt Pin is Low
   if Not (PINB and (1 shl ENC28J60_CONTROL_INT) = (1 shl ENC28J60_CONTROL_INT)) then
     enc28j60_InterruptTriggered;
@@ -41,8 +53,8 @@ end;
 
 begin
 {$IFDEF FP_ENC28J60_DEBUG}
-  SerialUART.Init(57600);
-  SerialUART.SendStringLn('Free Pascal ENC28J60 Driver Demo');
+  UARTInit(115200);
+  //UARTSendStringLn('Free Pascal ENC28J60 Driver Demo');
 {$ENDIF}
 
   // Chip Select / Slave Select Pin
@@ -66,12 +78,11 @@ begin
 {$ENDIF}
 
 {$IFDEF FP_HAS_TAT24MAC402}
-  enc28j60_SetMacAddress(at24mac402_GetMacAddress);
+  enc28j60_Init(at24mac402_GetMacAddress);
 {$ELSE}
-  enc28j60_SetMacAddress(HWAddress($01, $02, $03, $04, $05, $06));
+  enc28j60_Init(HWAddress($01, $02, $03, $04, $05, $06));
 {$ENDIF}
 
-  enc28j60_Init;
   // ENC28J60 Uses SPI which needs global interrupts.
   avr_sei;
 

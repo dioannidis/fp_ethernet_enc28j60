@@ -31,7 +31,7 @@ function AtomicRead(var value: word): word; inline;
 procedure AtomicWrite(var value: word; new_value: word); inline;
 
 procedure delay_ms(time: byte);
-function int_str(l: longint): shortstring;
+//function int_str(l: longint): shortstring;
 
 {$IFDEF FP_DEBUG}
 var
@@ -84,14 +84,14 @@ begin
   end ['r20','r21','r22'];
 end;
 
-function int_str(l: longint): shortstring;
+//function int_str(l: longint): shortstring;
 //var
 //  m, m1: longword;
 //  pcstart, pc2start, pc, pc2: PChar;
 //  hs: string[32];
 //  overflow: longint;
 //  s: shortstring;
-begin
+//begin
   //pc2start := @s[1];
   //pc2 := pc2start;
   //if (l < 0) then
@@ -121,6 +121,6 @@ begin
   //end;
   //s[0] := char(pc2 - pc2start);
   //Result := s;
-end;
+//end;
 
 end.

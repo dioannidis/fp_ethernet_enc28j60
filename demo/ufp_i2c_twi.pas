@@ -28,11 +28,7 @@ unit ufp_i2c_twi;
 
 interface
 
-//uses
-//  intrinsics;
-
 const
-  CPU_Clock = 16000000;
   I2C_Takt  = 100000;
   TWI_Write = 0;
   TWI_Read  = 1;
@@ -40,9 +36,9 @@ const
   SCL = 5;
 
 procedure TWIInit;
-procedure TWIStart(addr: byte);
+procedure TWIStart(const addr: byte);
 procedure TWIStop;
-procedure TWIWrite(u8data: byte);
+procedure TWIWrite(const u8data: byte);
 
 function TWIReadACK: byte;
 function TWIReadNACK: byte;
@@ -53,7 +49,7 @@ implementation
 
 procedure TWIInit;
 const
-  TWBR_val = byte((CPU_Clock div I2C_Takt) - 16) div 2;
+  TWBR_val = byte((F_CPU div I2C_Takt) - 16) div 2;
 begin
   TWSR := 0;
   TWBR := byte(TWBR_val);
@@ -65,7 +61,7 @@ begin
   TWSR := TWSR and not (1 shl 1);
 end;
 
-procedure TWIStart(addr: byte);
+procedure TWIStart(const addr: byte);
 begin
   TWCR := 0;
   TWCR := (1 shl TWINT) or (1 shl TWSTA) or (1 shl TWEN);
@@ -83,7 +79,7 @@ begin
   TWCR := (1 shl TWINT) or (1 shl TWSTO) or (1 shl TWEN);
 end;
 
-procedure TWIWrite(u8data: byte);
+procedure TWIWrite(const u8data: byte);
 begin
   TWDR := u8data;
   TWCR := (1 shl TWINT) or (1 shl TWEN);

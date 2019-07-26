@@ -229,7 +229,7 @@ function TCPCreateSocket: TSocketHandle;
   var
     tmp: PTCPSocket;
   begin
-    tmp:=PTCPSocket(AllocMem(sizeof(TTCPSocket)));
+    tmp:=PTCPSocket(AllocMem(SizeOf(TTCPSocket)));
 
     tmp^.Next:=Socks;
     tmp^.WindowScale:=2;
