@@ -15,7 +15,7 @@
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes Count="2">
+    <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
       <Item2 Name="Release">
         <CompilerOptions>
@@ -31,10 +31,13 @@
           </SearchPaths>
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
-            <HeapSize Value="1530"/>
+            <HeapSize Value="1024"/>
             <TargetProcessor Value="AVR5"/>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
           </CodeGeneration>
           <Linking>
             <Debugging>
@@ -53,13 +56,13 @@
 -WpATMEGA328P
 -XPavr-
 -FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
--dFP_ENC28J60_DEBUG
+-dFP_ENC28J60_USEINTERRUPT
 -dF_CPU:=16000000"/>
             <OtherDefines Count="4">
               <Define0 Value="DEBUGUNITS"/>
               <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
               <Define2 Value="FP_ENC28J60_DEBUG"/>
-              <Define3 Value="F_CPU:=20000000"/>
+              <Define3 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <ExecuteAfter>
               <Command Value="G:\Programming\dimitris\tools\avr8-gnu-toolchain\bin\avr-size.exe --format avr --mcu atmega328p  G:\Programming\dimitris\Projects\fp_ethernet_enc28j60_github\demo\avrFP_ENC28J60_Test.elf"/>
@@ -67,19 +70,131 @@
           </Other>
         </CompilerOptions>
       </Item2>
+      <Item3 Name="Arduino">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <PathDelim Value="\"/>
+          <Target>
+            <Filename Value="avrFP_ENC28J60_Test"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
+            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <HeapSize Value="1530"/>
+            <TargetProcessor Value="AVR5"/>
+            <TargetCPU Value="avr"/>
+            <TargetOS Value="embedded"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <GenerateDebugInfo Value="False"/>
+              <UseLineInfoUnit Value="False"/>
+              <StripSymbols Value="True"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+          </Linking>
+          <Other>
+            <CustomOptions Value="-a
+-al
+-Xe
+-Xm
+-Sm
+-WpATMEGA328P
+-XPavr-
+-FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
+-dFP_ENC28J60_USEINTERRUPT
+-dFP_ENC28J60_DEBUG
+-dF_CPU:=16000000"/>
+            <OtherDefines Count="4">
+              <Define0 Value="DEBUGUNITS"/>
+              <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
+              <Define2 Value="FP_ENC28J60_DEBUG"/>
+              <Define3 Value="F_CPU:=16000000"/>
+            </OtherDefines>
+            <ExecuteAfter>
+              <Command Value="G:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.exe -CG:\Programming\dimitris\tools\avrdude-6.3-mingw32\avrdude.conf -v -patmega328p -carduino -P COM4 -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
+            </ExecuteAfter>
+          </Other>
+        </CompilerOptions>
+      </Item3>
+      <Item4 Name="USBasp">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <PathDelim Value="\"/>
+          <Target>
+            <Filename Value="avrFP_ENC28J60_Test"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <OtherUnitFiles Value="..\source;..\fp-ethernet"/>
+            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <HeapSize Value="1530"/>
+            <TargetProcessor Value="AVR5"/>
+            <TargetCPU Value="avr"/>
+            <TargetOS Value="embedded"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <GenerateDebugInfo Value="False"/>
+              <UseLineInfoUnit Value="False"/>
+              <StripSymbols Value="True"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+          </Linking>
+          <Other>
+            <CustomOptions Value="-a
+-al
+-Xe
+-Xm
+-Sm
+-WpATMEGA328P
+-XPavr-
+-FDG:\Programming\dimitris\tools\avr8-gnu-toolchain\bin
+-dFP_ENC28J60_USEINTERRUPT
+-dFP_ENC28J60_DEBUG
+-dF_CPU:=16000000"/>
+            <OtherDefines Count="4">
+              <Define0 Value="DEBUGUNITS"/>
+              <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
+              <Define2 Value="FP_ENC28J60_DEBUG"/>
+              <Define3 Value="F_CPU:=16000000"/>
+            </OtherDefines>
+            <ExecuteAfter>
+              <Command Value="G:\Programming\dimitris\tools\arduino-1.8.10-windows\arduino-1.8.10\hardware\tools\avr\bin\avrdude.exe -CG:\Programming\dimitris\tools\arduino-1.8.10-windows\arduino-1.8.10\hardware\tools\avr\etc\avrdude.conf -v -patmega328p -c usbasp -Uflash:w:avrFP_ENC28J60_Test.Hex:i"/>
+              <CompileReasons Compile="False"/>
+            </ExecuteAfter>
+          </Other>
+        </CompilerOptions>
+      </Item4>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0"/>
     </RunParams>
-    <Units Count="1">
+    <Units Count="2">
       <Unit0>
         <Filename Value="avrFP_ENC28J60_Test.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
+      <Unit1>
+        <Filename Value="ufp_ethernet.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -107,12 +222,11 @@
         <OverflowChecks Value="True"/>
         <StackChecks Value="True"/>
       </Checks>
-      <HeapSize Value="1530"/>
+      <HeapSize Value="1024"/>
       <VerifyObjMethodCallValidity Value="True"/>
       <TargetProcessor Value="AVR5"/>
       <TargetCPU Value="avr"/>
       <TargetOS Value="embedded"/>
-      <SmallerCode Value="True"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
@@ -138,11 +252,12 @@
         <Define0 Value="DEBUGUNITS"/>
         <Define1 Value="FP_ENC28J60_USEINTERRUPT"/>
         <Define2 Value="FP_ENC28J60_DEBUG"/>
-        <Define3 Value="F_CPU:=20000000"/>
-        <Define4 Value="F_CPU:=16000000"/>
+        <Define3 Value="F_CPU:=16000000"/>
+        <Define4 Value="F_CPU:=20000000"/>
       </OtherDefines>
       <ExecuteAfter>
         <Command Value="G:\Programming\dimitris\tools\avr8-gnu-toolchain\bin\avr-size.exe --format avr --mcu atmega328p  G:\Programming\dimitris\Projects\fp_ethernet_enc28j60_github\demo\avrFP_ENC28J60_Test.elf"/>
+        <ShowAllMessages Value="True"/>
       </ExecuteAfter>
     </Other>
   </CompilerOptions>

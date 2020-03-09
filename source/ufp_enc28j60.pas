@@ -24,13 +24,16 @@ unit ufp_enc28j60;
 
 }
 
-{$mode objfpc}{$H-}
+{$mode objfpc}
+{$LONGSTRINGS OFF}
+{$INLINE ON}
+//{$MACRO ON}
 {$WRITEABLECONST OFF}
 
 interface
 
 uses
-{$IFDEF FP_ENC28J60_USEINTERRUPT}
+{$IF DEFINED(FP_ENC28J60_USEINTERRUPT) OR DEFINED(FP_ENC28J60_DEBUG)}
   uUtils,
 {$ENDIF}
   fpethtypes;
@@ -45,10 +48,10 @@ var
   // PORTB by default
   ENC28J60_CONTROL_PORT: byte absolute PORTB;
   ENC28J60_CONTROL_DDR: byte absolute DDRB;
-  ENC28J60_CONTROL_SI: byte  = 3;
-  ENC28J60_CONTROL_SO: byte  = 4;
-  ENC28J60_CONTROL_SCK: byte = 5;
-  ENC28J60_CONTROL_CS: byte  = 255;
+  ENC28J60_CONTROL_SI: Byte  = 3;
+  ENC28J60_CONTROL_SO: Byte  = 4;
+  ENC28J60_CONTROL_SCK: Byte = 5;
+  ENC28J60_CONTROL_CS: Byte  = 255;
 {$IFDEF FP_ENC28J60_USEINTERRUPT}
   ENC28J60_CONTROL_INT: byte = 255;
 {$ENDIF}
@@ -287,7 +290,7 @@ const
   RXSTART_INIT = $0;
   // receive buffer end. make sure this is an odd value ( See Rev. B1,B4,B5,B7 Silicon Errata 'Memory (Ethernet Buffer)')
   //RXSTOP_INIT = ($1FFF - $1800);
-  RXSTOP_INIT = ($1FFF - $5EB);
+  RXSTOP_INIT = ($1FFF - $1446);
   // start TX buffer RXSTOP_INIT+1
   TXSTART_INIT = RXSTOP_INIT + 1;
   // stp TX buffer at end of mem
@@ -297,29 +300,37 @@ const
   MAX_FRAMELEN = 1500;
 // (note: maximum ethernet frame length would be 1518)
 
+{$IFDEF FP_ENC28J60_DEBUG}
+  RcvPacketStr: string[25] = 'Receive packet [Start: 0x'; section '.progmem';
+  NextPacketStr: string[10] = '] next: 0x'; section '.progmem';
+  LenPacketStr: string[11] = ' Length: 0x'; section '.progmem';
+  StatPacketStr: string[9] = ' stat: 0x'; section '.progmem';
+  CountPacketStr: string[15] = ' Packet count: '; section '.progmem';
+  RevENC28J60Str: string[24] = 'ENC28J60 Revision Id: 0x'; section '.progmem';
+{$endif}
+
 var
   FPacketReceivedCounter: Word;
   FBank: byte;
   FNextPacketPtr,
   FPacketReadPtr: Word;
   FRevID: byte;
-  FBuffer: PByte;
-  //FBufferSize: Word;
+  //FBuffer: Array [0..MAX_FRAMELEN - 1] of byte;
 
-procedure CSActive; inline;
+procedure CSActive;
 begin
   ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT and not (1 shl ENC28J60_CONTROL_CS);
 end;
 
-procedure CSPassive; inline;
+procedure CSPassive;
 begin
-  ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT or (1 shl ENC28J60_CONTROL_CS);
+  ENC28J60_CONTROL_PORT := ENC28J60_CONTROL_PORT or (Byte(1) shl ENC28J60_CONTROL_CS);
 end;
 
 procedure WaitSPI; inline;
 begin
   repeat
-  until (SPSR and (1 shl SPIF)) <> 0;
+  until (SPSR and (Byte(1) shl SPIF)) <> 0;
 end;
 
 function ReadOp(const AOP, AAddress: byte): byte;
@@ -352,7 +363,7 @@ begin
   CSPassive;
 end;
 
-procedure SetBank(const AAddress: byte); inline;
+procedure SetBank(const AAddress: byte);
 begin
   // set the bank (if needed)
   if (byte(AAddress and BANK_MASK) <> FBank) then
@@ -398,6 +409,27 @@ begin
   Write(ECOCON, AClk and $7);
 end;
 
+{$IFDEF FP_ENC28J60_DEBUG}
+procedure ReadBufferSeqStop;
+begin
+  CSPassive;
+end;
+
+function ReadBufferSeq: Byte;
+begin
+  SPDR := $0;
+  WaitSPI;
+  Result := SPDR;
+end;
+
+procedure ReadBufferSeqStart;
+begin
+  CSActive;
+  SPDR := ENC28J60_READ_BUF_MEM;
+  WaitSPI;
+end;
+{$endif}
+
 procedure ReadBuffer(ALength: Word; ABuffer: PByte);
 begin
   CSActive;
@@ -409,7 +441,7 @@ begin
     SPDR := $0;
     WaitSPI;
     ABuffer^ := SPDR;
-    inc(ABuffer);
+    Inc(ABuffer);
   end;
   CSPassive;
 end;
@@ -417,7 +449,10 @@ end;
 procedure PacketReceive;
 var
   PacketLength, ReceiveStatus: Word;
-  y: integer;
+{$IFDEF FP_ENC28J60_DEBUG}
+  i: integer;
+  DbgMsg: ShortString = '';
+{$ENDIF}
 begin
   // Set the packet read pointer to actual start of packet bypass the first 6 bytes.
   if FNextPacketPtr + 6 > RXSTOP_INIT then
@@ -436,7 +471,8 @@ begin
   // read the packet length (see datasheet page 43)
   PacketLength := ReadOp(ENC28J60_READ_BUF_MEM, 0);
   PacketLength := PacketLength or (Word(ReadOp(ENC28J60_READ_BUF_MEM, 0)) shl 8);
-  Dec(PacketLength, 4); //remove the CRC count
+  if PacketLength >= 4 then
+    PacketLength := PacketLength - 4; //remove the CRC count
 
   // read the receive status (see datasheet page 43)
   ReceiveStatus := ReadOp(ENC28J60_READ_BUF_MEM, 0);
@@ -448,17 +484,10 @@ begin
   // Received Ok. received status vectors bit 23 (see datasheet page 43)
   if ((ReceiveStatus and $80) <> 0) then
   begin
-    //if FBufferSize < PacketLength then
-    //begin
-    //  FreeMem(FBuffer);
-    //  FBufferSize := PacketLength;
-    //  FBuffer := GetMem(PacketLength);
-    //end;
-    //if Assigned(FBuffer) then
-      ReadBuffer(PacketLength, FBuffer);
   end;
 
-  // This frees the memory we just read out. Move the RX read pointer to the start of the next received packet
+  // This frees the memory we just read out. Move the RX read pointer to
+  // the start of the next received packet
   // However, compensate for the errata point 14, rev B1,B4,B5,B7: make sure this is an odd value
   if FNextPacketPtr = RXSTART_INIT then
   begin
@@ -475,37 +504,48 @@ begin
 
 {$IFDEF FP_ENC28J60_DEBUG}
   UARTSendStringLn('');
-  UARTSendString('Receive packet [ Start: 0x' + HexStr(FPacketReadPtr, 4));
-  UARTSendString( ' Length: 0x' + HexStr(PacketLength, 4));
-  UARTSendString('] next: 0x' + HexStr(FNextPacketPtr, 4));
-  UARTSendString(' stat: 0x' + HexStr(ReceiveStatus, 4));
-  UARTSendString(' Packet count: ' + HexStr(FPacketReceivedCounter, 2));
-  UARTSendStringLn('');
-  for y := 0 to PacketLength - 1 do
-    UARTSendString(HexStr(FBuffer[y], 2));
+  read_progmem_str(RcvPacketStr, DbgMsg);
+  UARTSendString(DbgMsg + HexStr(FPacketReadPtr, 4));
+  read_progmem_str(LenPacketStr, DbgMsg);
+  UARTSendString(DbgMsg + HexStr(PacketLength, 4));
+  read_progmem_str(NextPacketStr, DbgMsg);
+  UARTSendString(DbgMsg + HexStr(FNextPacketPtr, 4));
+  read_progmem_str(StatPacketStr, DbgMsg);
+  UARTSendString(DbgMsg + HexStr(ReceiveStatus, 4));
+  read_progmem_str(CountPacketStr, DbgMsg);
+  UARTSendStringLn(DbgMsg + HexStr(FPacketReceivedCounter, 2));
+
+  ReadBufferSeqStart;
+  for i := 0 to PacketLength - 1 do
+    UARTSendString(HexStr(ReadBufferSeq, 2));
+  ReadBufferSeqStop;
+
   UARTSendStringLn('');
 {$ENDIF}
 
 end;
 
 procedure enc28j60_Init(const AHWAddress: THWAddress);
+var
+{$IFDEF FP_ENC28J60_DEBUG}
+  DbgMsg: ShortString;
+{$ENDIF}
+  timeout: Integer;
+  chip_ready: byte;
 begin
 
   FBank := $FF;
-
-  FBuffer := nil;
-  FBuffer := GetMem(1518);
 
   // Iniialize io
   // SS as output.
   // mosi, sck output
   ENC28J60_CONTROL_DDR := ENC28J60_CONTROL_DDR or
-    ((1 shl ENC28J60_CONTROL_SI) or (1 shl ENC28J60_CONTROL_SCK));
+    ((Byte(1) shl ENC28J60_CONTROL_SI) or (Byte(1) shl ENC28J60_CONTROL_SCK));
   // miso is input
   ENC28J60_CONTROL_DDR := ENC28J60_CONTROL_DDR or
-    (ENC28J60_CONTROL_DDR and not (1 shl ENC28J60_CONTROL_SO));
+    (ENC28J60_CONTROL_DDR and not (Byte(1) shl ENC28J60_CONTROL_SO));
   // SS as output.
-  ENC28J60_CONTROL_DDR := (ENC28J60_CONTROL_DDR or (1 shl ENC28J60_CONTROL_CS));
+  ENC28J60_CONTROL_DDR := (ENC28J60_CONTROL_DDR or (Byte(1) shl ENC28J60_CONTROL_CS));
 
   CSPassive; // SS High
 
@@ -519,15 +559,18 @@ begin
   //SPCR := SPCR or ((1 SHL SPE) or (0 SHL SPIE) or (0 SHL DORD) or (1 SHL MSTR) or
   //  (0 SHL CPOL) or (0 SHL CPHA) or (%01 SHL SPR));
   SPCR := (1 shl SPE) or (1 shl MSTR){ or (%11 shl SPR)};
-  //SPSR := (0 shl SPI2X);
-  SPSR := (1 shl SPI2X);
+  SPSR := (0 shl SPI2X);
+  //SPSR := (1 shl SPI2X);
 
   // perform system reset
   WriteOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
   //delay_ms(50);
 
+  timeout := 0;
   repeat
-  until (ReadOp(ENC28J60_READ_CTRL_REG, ESTAT) and ESTAT_CLKRDY) <> 0;
+    inc(timeout);
+    chip_ready := ReadOp(ENC28J60_READ_CTRL_REG, ESTAT) and ESTAT_CLKRDY;
+  until ( chip_ready <> 0) or (timeout > 100000);
 
   FNextPacketPtr := RXSTART_INIT;
 
@@ -570,7 +613,7 @@ begin
   Write(MACON2, $00);
   // enable automatic padding to 60bytes and CRC operations
   WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0 or MACON3_TXCRCEN or
-    MACON3_FRMLNEN);
+    MACON3_FRMLNEN{ or MACON3_HFRMLEN});
   // set inter-frame gap (non-back-to-back)
   Write(MAIPGL, $12);
   Write(MAIPGH, $0C);
@@ -614,9 +657,8 @@ begin
   FRevID := Read(EREVID);
 
 {$IFDEF FP_ENC28J60_DEBUG}
-  //UARTSendString('ENC28J60 Revision Id: 0x');
-  //UARTSendString(HexStr(FRevID, 2));
-  //UARTSendStringLn(' Initialized.');
+  read_progmem_str(RevENC28J60Str, DbgMsg);
+  UARTSendStringLn(DbgMsg + HexStr(FRevID, 2));
 {$ENDIF}
 
 end;
@@ -634,7 +676,7 @@ begin
 {$ELSE}
   //Use of EPKCNT compensate for the
   //errata point 6, rev B1,B4,B5,B7: Receive Packet Pending Interrupt Flag (PKTIF) unreliable!
-  FPacketReceivedCounter := Read(EPKTCNT);
+  FPacketReceivedCounter := Word(Read(EPKTCNT));
   if FPacketReceivedCounter > 0 then
 {$ENDIF}
     PacketReceive;
@@ -655,7 +697,7 @@ begin
 end;
 {$ENDIF}
 
-initialization
-  ReturnNilIfGrowHeapFails := True;
+//initialization
+//  ReturnNilIfGrowHeapFails := True;
 
 end.
