@@ -3,6 +3,12 @@ unit fpethtypes;
 interface
 
 {$mode objfpc}
+{$LONGSTRINGS OFF}
+{$INLINE ON}
+{$MACRO ON}
+{$MODESWITCH TYPEHELPERS}
+{$MODESWITCH ADVANCEDRECORDS}
+{$WRITEABLECONST OFF}
 
 uses
   fpethbuf;

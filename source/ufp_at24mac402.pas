@@ -24,7 +24,12 @@ unit ufp_at24mac402;
 
 }
 
-{$mode objfpc}{$H+}
+{$mode objfpc}
+{$LONGSTRINGS OFF}
+{$INLINE ON}
+{$MACRO ON}
+{$MODESWITCH TYPEHELPERS}
+{$MODESWITCH ADVANCEDRECORDS}
 {$WRITEABLECONST OFF}
 
 interface
