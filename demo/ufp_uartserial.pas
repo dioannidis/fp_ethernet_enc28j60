@@ -25,7 +25,11 @@ unit ufp_uartserial;
 }
 
 
-{$mode objfpc}{$H+}
+{$mode objfpc}
+//{$LONGSTRINGS OFF}
+{$INLINE ON}
+{$WRITEABLECONST OFF}
+//{$MODESWITCH RESULT}
 
 interface
 
@@ -36,14 +40,14 @@ interface
 
 implementation
 
-function Divider(const FBaudRate: DWord): integer;
+function Divider(const FBaudRate: DWord): Byte; inline;
 begin
-  Result := (F_CPU div 4 div FBaudRate - 1) div 2;
+  Divider := (F_CPU div 4 div FBaudRate - 1) div 2;
 end;
 
 procedure UARTInit(const ABaudRate: DWord = 57600);
 begin
-  UBRR0 := Divider(ABaudRate);
+  UBRR0 :=  Divider(ABaudRate);
   UCSR0A := (1 shl U2X0);
   UCSR0B := (1 shl TXEN0) or (1 shl RXEN0);
   UCSR0C := (%011 shl UCSZ0);
@@ -58,7 +62,7 @@ end;
 function UARTReadChar: char;
 begin
   while ((UCSR0A and (1 shl RXC0)) = 0) do ;
-  Result := char(UDR0);
+  UARTReadChar := char(UDR0);
 end;
 
 procedure UARTSendString(const s: ShortString);
