@@ -79,8 +79,8 @@ var
 begin
   for i := 1 to length(s) do
     UARTSendChar(s[i]);
-  UARTSendChar(#10);
   UARTSendChar(#13);
+  UARTSendChar(#10);
 end;
 
 end.
